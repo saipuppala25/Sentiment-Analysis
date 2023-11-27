@@ -1,8 +1,10 @@
 # used https://realpython.com/python-gui-tkinter/, https://docs.python.org/3/library/tkinter.ttk.html
-# https://huggingface.co/SamLowe/roberta-base-go_emotions?
-# https://huggingface.co/alimazhar-110/website_classification?text=I+like+you.+I+love+you
-# https://huggingface.co/lxyuan/distilbert-base-multilingual-cased-sentiments-student?text=the+sky+is+cloudy
-# Authors: 
+# Emotion analysis: https://huggingface.co/SamLowe/roberta-base-go_emotions?
+# Website claassification: https://huggingface.co/alimazhar-110/website_classification?text=I+like+you.+I+love+you
+# Sentiment analysis: https://huggingface.co/lxyuan/distilbert-base-multilingual-cased-sentiments-student?text=the+sky+is+cloudy
+
+# Authors: Sai Puppala, Josh Klein, Sid Pothineni, Kenneth Hsu, Dani Tolessa
+# Date: 11/27/23
 
 import tkinter as tk
 from tkinter import ttk
@@ -34,12 +36,7 @@ def submit_for_analysis():
 
     emotion_label = emotion_result[0]["label"].capitalize()
     emotion_score = round(emotion_result[0]["score"], 2)
-    #Determine output for emotion
-    if (emotion_label == "Anger" or emotion_label == "Annoyance" or emotion_label == "Disapproval" or
-        emotion_label == "Disgust" or emotion_label == "Dissapointment") and emotion_score > 0.5:
-        messagebox.showwarning("Warning", f"Our Language Model has detected a high level of {emotion_label}. Please ensure your language is respectful.")
 
-    
     sentiment_result_text.set(f"Sentiment: {sentiment_label} (Intensity: {sentiment_score})\nEmotion: {emotion_label} (Confidence: {emotion_score})")
 
     # Change background color to red if negative, green if positive
@@ -56,18 +53,27 @@ def submit_for_analysis():
     # Display results of website analysis
     website_label = website_result[0]["label"]
     website_score = round(website_result[0]["score"], 2)
-    website_results_text.set(f"Best fit Website category: {website_label} \nConfidence: {website_score}")
+    website_results_text.set(f"Best fit Website category: {website_label} (Confidence: {website_score})")
 
     history.append((input_text, sentiment_label, sentiment_score, emotion_label, emotion_score))
     update_history_display()
 
+    #Determine potential warning output for emotion
+    if (emotion_label == "Anger" or emotion_label == "Annoyance" or
+        emotion_label == "Disgust" or emotion_label == "Dissapointment") and emotion_score > 0.5:
+        messagebox.showwarning("Warning", f"Our Language Model has detected a high level of {emotion_label.lower()}. Please ensure your language is respectful.")
+
+
+
 def update_history_display():
-    history_text.config(state=tk.NORMAL)  # Enable the widget before updating
-    history_text.delete("1.0", tk.END)  # Clear the existing content
+    history_text.config(state=tk.NORMAL)  # enable the widget before update
+    history_text.delete("1.0", tk.END)  # clear the current to be replaced
+
     for i, entry in enumerate(reversed(history)):
         input_text, sentiment_label, sentiment_score, emotion_label, emotion_score = entry
         history_text.insert(tk.END, f"{i+1}. \"{input_text}\" - Sentiment: {sentiment_label} ({sentiment_score}), Emotion: {emotion_label} ({emotion_score})\n\n")
-    history_text.config(state=tk.DISABLED)  # Disable the widget after updating
+
+    history_text.config(state=tk.DISABLED)  # disable widget after update
 
 # Create the main window
 window = tk.Tk()
