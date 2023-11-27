@@ -1,4 +1,8 @@
 # used https://realpython.com/python-gui-tkinter/, https://docs.python.org/3/library/tkinter.ttk.html
+# https://huggingface.co/SamLowe/roberta-base-go_emotions?
+# https://huggingface.co/alimazhar-110/website_classification?text=I+like+you.+I+love+you
+# https://huggingface.co/lxyuan/distilbert-base-multilingual-cased-sentiments-student?text=the+sky+is+cloudy
+# Authors: 
 
 import tkinter as tk
 from tkinter import ttk
@@ -6,6 +10,9 @@ from transformers import pipeline
 
 sentiment_analysis_model = "lxyuan/distilbert-base-multilingual-cased-sentiments-student"
 sentiment_analyzer = pipeline("sentiment-analysis", model=sentiment_analysis_model)
+
+emotion_analysis_model = "SamLowe/roberta-base-go_emotions"
+emotion_analyzer = pipeline("sentiment-analysis", model=emotion_analysis_model)
 
 website_class_model = "alimazhar-110/website_classification"
 website_class_analyzer = pipeline("text-classification", model=website_class_model)
@@ -17,14 +24,18 @@ def submit_for_analysis():
     
     # get teh results of the used models
     sentiment_result = sentiment_analyzer(input_text)
+    emotion_result = emotion_analyzer(input_text)
     website_result = website_class_analyzer(input_text)
 
 
-    # Print the results of sentiment analysis
+    # Display the results of sentiment analysis
     sentiment_label = sentiment_result[0]["label"].capitalize()
     sentiment_score = round(sentiment_result[0]["score"], 2)
+
+    emotion_label = emotion_result[0]["label"].capitalize()
+    emotion_score = round(emotion_result[0]["score"], 2)
     
-    sentiment_result_text.set(f"Result: {sentiment_label} statement\nSentiment intensity: {sentiment_score}")
+    sentiment_result_text.set(f"Sentiment: {sentiment_label} (Intensity: {sentiment_score})\nEmotion: {emotion_label} (Confidence: {emotion_score})")
 
     # Change background color to red if negative, green if positive
     if sentiment_label.lower() == "negative":
@@ -37,25 +48,25 @@ def submit_for_analysis():
     sentiment_result_label.config(background=sentiment_color)
 
 
-    # Print results of website analysis
-    website_type = website_result[0]["label"]
-    website_confidence = round(website_result[0]["score"], 2)
-    website_results_text.set(f"Best fit Website category: {website_type} \nConfidence: {website_confidence}")
+    # Display results of website analysis
+    website_label = website_result[0]["label"]
+    website_score = round(website_result[0]["score"], 2)
+    website_results_text.set(f"Best fit Website category: {website_label} \nConfidence: {website_score}")
 
-    history.append((input_text, sentiment_label, sentiment_score))
+    history.append((input_text, sentiment_label, sentiment_score, emotion_label, emotion_score))
     update_history_display()
 
 def update_history_display():
     history_text.config(state=tk.NORMAL)  # Enable the widget before updating
     history_text.delete("1.0", tk.END)  # Clear the existing content
     for i, entry in enumerate(reversed(history)):
-        input_text, sentiment_label, sentiment_score = entry
-        history_text.insert(tk.END, f"{i+1}. \"{input_text}\" - Sentiment: {sentiment_label} ({sentiment_score})\n\n")
+        input_text, sentiment_label, sentiment_score, emotion_label, emotion_score = entry
+        history_text.insert(tk.END, f"{i+1}. \"{input_text}\" - Sentiment: {sentiment_label} ({sentiment_score}), Emotion: {emotion_label} ({emotion_score})\n\n")
     history_text.config(state=tk.DISABLED)  # Disable the widget after updating
 
 # Create the main window
 window = tk.Tk()
-window.geometry("700x800")
+window.geometry("700x700")
 window.title("Sentiment Analyzer")
 
 # setting the style
@@ -115,7 +126,7 @@ history_label.pack()
 scrollbar = ttk.Scrollbar(history_frame)
 scrollbar.pack(side="right", fill="y")
 
-history_text = tk.Text(history_frame, width=80, height=10, yscrollcommand=scrollbar.set)
+history_text = tk.Text(history_frame, width=80, height=5, yscrollcommand=scrollbar.set)
 history_text.pack(side="left", padx=5, pady=5, fill="both", expand=True)
 scrollbar.config(command=history_text.yview)
 
