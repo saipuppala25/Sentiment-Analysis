@@ -1,30 +1,48 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 from transformers import pipeline
 
+# Initialize the sentiment analysis pipeline
 sentiment_analysis_model = "lxyuan/distilbert-base-multilingual-cased-sentiments-student"
 sentiment_analyzer = pipeline("sentiment-analysis", model=sentiment_analysis_model)
 
+# History list to store past results
+history = []
+
 def submit_for_analysis():
-    input_text = text_entry.get("1.0", tk.END)
-    try:
-        res = sentiment_analyzer(input_text)
-        # Assuming 'res' is a list of dictionaries, we take the first result
-        label = res[0]['label'].capitalize()  # Capitalize the label
-        score = round(res[0]['score'], 3)  # Round the score to 3 decimal places
-        
-        # Update the result label with a more user-friendly format
-        result_text.set(f"Result: {label} statement\nStatement's score: {score}")
-        # Change the background color based on the sentiment
-        color = "#FFCCCC" if label.lower() == "negative" else "#CCFFCC"
-        result_label.config(background=color)
-    except Exception as e:
-        messagebox.showerror("Error", str(e))
-        result_text.set("")
+    input_text = text_entry.get("1.0", tk.END).strip()
+    if input_text:
+        try:
+            res = sentiment_analyzer(input_text)
+            label = res[0]['label'].capitalize()
+            score = round(res[0]['score'], 3)
+            result_text.set(f"Result: {label} statement\nStatement's score: {score}")
+            color = "#FFCCCC" if label.lower() == "negative" else "#CCFFCC"
+            result_label.config(background=color)
+            
+            # Update history by appending new entries
+            history.append((input_text, label, score))
+            
+            # Update the history display
+            update_history_display()
+            
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
+            result_text.set("")
+    else:
+        messagebox.showinfo("Info", "Please enter some text to analyze.")
+
+def update_history_display():
+    history_text.config(state=tk.NORMAL)  # Enable the widget before updating
+    history_text.delete("1.0", tk.END)  # Clear the existing content
+    for i, entry in enumerate(reversed(history)):
+        input_text, label, score = entry
+        history_text.insert(tk.END, f"{i+1}. \"{input_text}\" - {label} ({score})\n\n")
+    history_text.config(state=tk.DISABLED)  # Disable the widget after updating
 
 # Create the main window
 window = tk.Tk()
-window.geometry("700x800")
+window.geometry("700x900")  # Increased height to accommodate history area
 window.title("Sentiment Analyzer")
 
 # Styling
@@ -62,5 +80,19 @@ result_frame.pack(fill='both', expand=True)
 result_text = tk.StringVar()
 result_label = ttk.Label(result_frame, textvariable=result_text, font=("Helvetica", 12), background="#DDDDDD", wraplength=500)
 result_label.pack(padx=5, pady=5, fill='both')
+
+# History Frame
+history_frame = ttk.Frame(window, padding="10")
+history_frame.pack(fill='both', expand=True)
+
+history_label = ttk.Label(history_frame, text="Analysis History", font=("Helvetica", 12))
+history_label.pack()
+
+scrollbar = ttk.Scrollbar(history_frame)
+scrollbar.pack(side='right', fill='y')
+
+history_text = tk.Text(history_frame, width=80, height=10, yscrollcommand=scrollbar.set)
+history_text.pack(side='left', padx=5, pady=5, fill='both', expand=True)
+scrollbar.config(command=history_text.yview)
 
 window.mainloop()
