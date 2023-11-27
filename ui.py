@@ -1,37 +1,66 @@
-# Received a lot of assistance from: https://realpython.com/python-gui-tkinter/
-
 import tkinter as tk
+from tkinter import ttk
 from transformers import pipeline
 
 sentiment_analysis_model = "lxyuan/distilbert-base-multilingual-cased-sentiments-student"
-
 sentiment_analyzer = pipeline("sentiment-analysis", model=sentiment_analysis_model)
 
 def submit_for_analysis():
-    input = text_entry.get("1.0", tk.END)
+    input_text = text_entry.get("1.0", tk.END)
+    try:
+        res = sentiment_analyzer(input_text)
+        # Assuming 'res' is a list of dictionaries, we take the first result
+        label = res[0]['label'].capitalize()  # Capitalize the label
+        score = round(res[0]['score'], 3)  # Round the score to 3 decimal places
+        
+        # Update the result label with a more user-friendly format
+        result_text.set(f"Result: {label} statement\nStatement's score: {score}")
+        # Change the background color based on the sentiment
+        color = "#FFCCCC" if label.lower() == "negative" else "#CCFFCC"
+        result_label.config(background=color)
+    except Exception as e:
+        messagebox.showerror("Error", str(e))
+        result_text.set("")
 
-    # Analyze input with emotional intent
-    
-    res = sentiment_analyzer(input)
-    print(res)
-
-    # if would be received negatively, suggest less controversial alternative
-
-    # Use a website classification to tell the user where their post would likely fit the best
-    print("User entered:", input)
-
-# Create the window
+# Create the main window
 window = tk.Tk()
-window.geometry("600x600")
-header = tk.Label(text="Sentiment Analyzer" )
-header.pack()
+window.geometry("700x800")
+window.title("Sentiment Analyzer")
 
-# Creates text box for user to input their post they wish to analyze
-text_entry = tk.Text(window, width="70", height="7")
-text_entry.pack()
+# Styling
+style = ttk.Style()
+style.theme_use('clam')
 
-# Analyze button, calls the submit_for_analysis
-analyze_button = tk.Button(window, text="Analyze", width="7", height="2", command=submit_for_analysis)
-analyze_button.pack()
+# Header Frame
+header_frame = ttk.Frame(window, padding="10")
+header_frame.pack(fill='x')
+
+header_label = ttk.Label(header_frame, text="Sentiment Analyzer", font=("Helvetica", 16))
+header_label.pack()
+
+# Text Entry Frame
+text_frame = ttk.Frame(window, padding="10")
+text_frame.pack(fill='x')
+
+text_entry = tk.Text(text_frame, width=80, height=10)
+text_entry.pack(padx=5, pady=5)
+
+# Buttons Frame
+buttons_frame = ttk.Frame(window, padding="10")
+buttons_frame.pack(fill='x')
+
+analyze_button = ttk.Button(buttons_frame, text="Analyze", command=submit_for_analysis)
+analyze_button.pack(side='left', padx=5)
+
+exit_button = ttk.Button(buttons_frame, text="Exit", command=window.quit)
+exit_button.pack(side='right', padx=5)
+
+# Result Frame
+result_frame = ttk.Frame(window, padding="10")
+result_frame.pack(fill='both', expand=True)
+
+result_text = tk.StringVar()
+result_label = ttk.Label(result_frame, textvariable=result_text, font=("Helvetica", 12), background="#DDDDDD", wraplength=500)
+result_label.pack(padx=5, pady=5, fill='both')
 
 window.mainloop()
