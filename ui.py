@@ -7,7 +7,7 @@
 import tkinter as tk
 from tkinter import ttk
 from transformers import pipeline
-
+from tkinter import messagebox
 sentiment_analysis_model = "lxyuan/distilbert-base-multilingual-cased-sentiments-student"
 sentiment_analyzer = pipeline("sentiment-analysis", model=sentiment_analysis_model)
 
@@ -34,6 +34,11 @@ def submit_for_analysis():
 
     emotion_label = emotion_result[0]["label"].capitalize()
     emotion_score = round(emotion_result[0]["score"], 2)
+    #Determine output for emotion
+    if (emotion_label == "Anger" or emotion_label == "Annoyance" or emotion_label == "Disapproval" or
+        emotion_label == "Disgust" or emotion_label == "Dissapointment") and emotion_score > 0.5:
+        messagebox.showwarning("Warning", f"Our Language Model has detected a high level of {emotion_label}. Please ensure your language is respectful.")
+
     
     sentiment_result_text.set(f"Sentiment: {sentiment_label} (Intensity: {sentiment_score})\nEmotion: {emotion_label} (Confidence: {emotion_score})")
 
