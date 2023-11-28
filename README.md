@@ -13,7 +13,7 @@ Website classification model: https://huggingface.co/alimazhar-110/website_class
 
 To use this program, you must do the following:
 
-pip install tkinter
+pip install tk (this is tkinter)
 pip install transformers
 pip install tensorflow
 pip install torch
